@@ -22,6 +22,10 @@ const schema = new mongoose.Schema({
         type: String,
         default:"user",
     },
+    image: {
+        type: String,
+        default: "",
+    },
     subscription: [
     {
         type: mongoose.Schema.Types.ObjectId,

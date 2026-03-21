@@ -1,10 +1,13 @@
-import { User} from "../models/user.js";
+import fs from "fs";
+import { User } from "../models/user.js";
+import { Testimonial } from "../models/Testimonial.js";
+import { Progress } from "../models/Progress.js";
 import sendMail, {sendForgotMail} from "../middleware/sendMail.js";
 import TryCatch from "../middleware/TryCatch.js";
 import bcrypt from "bcryptjs"; 
 import jwt from "jsonwebtoken";
 export const register = TryCatch(async(req,res) =>{
-      const {email,name,password}=req.body
+      const {email,name,password, role}=req.body
 
         let user = await User.findOne({email});
         if(user)
@@ -15,7 +18,8 @@ export const register = TryCatch(async(req,res) =>{
         user = {
             name,
             email,
-            password: hashPassword
+            password: hashPassword,
+            role: role || "user"
         };
         const otp = Math.floor(Math.random()*1000000);
         const activationToken = jwt.sign(
@@ -57,6 +61,7 @@ export const verifyUser = TryCatch(async(req,res) =>{
     name:verify.user.name,
     email:verify.user.email,
     password:verify.user.password,
+    role: verify.user.role || "user",
    })
 
    res.json({message:"Registration Successful"});
@@ -79,7 +84,8 @@ export const loginUser = TryCatch(async(req,res) =>{
         expiresIn:"15d",
     });
 
-    res.json({message:`Welcome back"${user.name}`,
+    res.json({
+        message: `Welcome back ${user.name}`,
          token,
          user,
     });
@@ -146,4 +152,47 @@ export const resetPassword = TryCatch(async (req, res) => {
   await user.save();
 
   res.json({ message: "Password Reset" });
+});
+
+export const updateProfilePic = TryCatch(async (req, res) => {
+  const user = await User.findById(req.user._id);
+
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  if (req.file) {
+    // Save image with forward slashes universally for URL parsing protection
+    user.image = req.file.path.replace(/\\/g, "/");
+  }
+
+  await user.save();
+
+  res.json({
+    message: "Profile picture updated successfully",
+    user,
+  });
+});
+
+export const deleteMyProfile = TryCatch(async (req, res) => {
+  const user = await User.findById(req.user._id);
+
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  // Securely sever physical image ties
+  if (user.image) {
+    fs.unlink(user.image, (err) => {
+      if (err) console.log("Failed to delete avatar from local storage:", err);
+    });
+  }
+
+  // Database Cascade Scrubbing
+  await Testimonial.deleteMany({ user: req.user._id });
+  await Progress.deleteMany({ user: req.user._id });
+  
+  await User.findByIdAndDelete(req.user._id);
+
+  res.json({ message: "Account completely deleted successfully." });
 });
