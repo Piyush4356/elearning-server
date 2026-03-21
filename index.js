@@ -13,9 +13,12 @@ export const instance = new Razorpay({
 
 const app = express();
 
-//using middlewares
+// Make middleware fully accessible to Vercel domains dynamically
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin: true, // Dynamically allows any Vercel/localhost frontend requesting it
+  credentials: true
+}));
 const PORT = process.env.PORT || 5000;
 connectDB();
 app.get("/",(req,res)=>{
