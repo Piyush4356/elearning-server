@@ -30,3 +30,16 @@ export const isAdmin = (req,res,next) =>{
         });
     }
 }
+
+export const isAdminOrTester = (req,res,next) =>{
+    try{
+        if(!["admin", "tester"].includes(req.user.role)) return res.status(403).json({
+            message:"You are not an admin or tester",
+        });
+        next();
+    }catch(error){
+        res.status(500).json({
+            message:"Error in Admin Middleware",
+        });
+    }
+}
