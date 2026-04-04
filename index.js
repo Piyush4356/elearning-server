@@ -31,11 +31,15 @@ import userRoutes from "./routes/user.js";
 import courseRoutes from "./routes/course.js";
 import adminRoutes from "./routes/admin.js";
 import testimonialRoutes from "./routes/testimonial.js";
+import supportRoutes from "./routes/support.js";
+import quizRoutes from "./routes/quiz.js";
 //using routes
 app.use("/api",userRoutes);
 app.use("/api",courseRoutes);
 app.use("/api",adminRoutes);
 app.use("/api",testimonialRoutes);
+app.use("/api",supportRoutes);
+app.use("/api",quizRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
